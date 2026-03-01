@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+
+/* Opcional: Uma cor de fundo global suave */
+body {
+  background-color: #f9fafb;
+}
