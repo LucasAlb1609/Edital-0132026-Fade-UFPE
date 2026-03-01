@@ -17,7 +17,7 @@ Uma aplicação web moderna e responsiva desenvolvida em React para gerenciar ev
 * **👥 Gerenciamento de Participantes (CRUD):**
     * Cadastro e controle do status de check-in.
     * *Transferência de Eventos:* Funcionalidade que permite realocar um participante para outro evento através de seleção intuitiva.
-* **⚙️ Motor de Regras de Check-in (O Coração da Aplicação):**
+* **⚙️ Motor de Regras de Check-in:**
     * Painel exclusivo para configuração de janelas de tempo de entrada (liberação e encerramento).
     * *Prevenção de Conflitos (Algoritmo):* Calcula intersecções matemáticas e impede que regras obrigatórias possuam janelas de validação incompatíveis.
     * *Garantia de Estado:* Impede a remoção ou desativação da última regra ativa.
