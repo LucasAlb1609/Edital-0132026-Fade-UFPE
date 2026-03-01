@@ -2,7 +2,7 @@
 
 Uma aplicação web moderna e responsiva desenvolvida em React para gerenciar eventos, participantes e regras complexas de check-in. Este projeto simula um painel de administração com autenticação, validações rigorosas de estado e roteamento protegido.
 
-🔗 **[Acesse a aplicação online aqui](https://edital-0132026-fade-ufpe.vercel.app/login)**
+🔗 **[Acesse a aplicação online aqui](https://edital-0132026-fade-ufpe.vercel.app/)**
 
 ---
 
