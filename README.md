@@ -1,73 +1,119 @@
-# React + TypeScript + Vite
+# 🎫 Painel do Organizador de Eventos
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Uma aplicação web moderna e responsiva desenvolvida em React para gerenciar eventos, participantes e regras complexas de check-in. Este projeto simula um painel de administração com autenticação, validações rigorosas de estado e roteamento protegido.
 
-Currently, two official plugins are available:
+🔗 **[Acesse a aplicação online aqui](#)** *(Substitua por seu link da Vercel)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Funcionalidades Principais
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **🔐 Autenticação Simulada (Mock JWT):** Sistema de login com validação e armazenamento seguro no `localStorage`.
+* **🛡️ Rotas Protegidas:** Utilização do `react-router-dom` para garantir que apenas usuários autenticados acessem o dashboard e as páginas internas.
+* **📊 Dashboard Interativo:** Resumo em tempo real da quantidade de eventos e participantes cadastrados.
+* **📅 Gerenciamento de Eventos (CRUD):** * Criação, edição e exclusão de eventos com filtros de pesquisa.
+    * *Validação de datas:* Impede a criação de eventos "Ativos" com datas no passado.
+    * *Exclusão em cascata:* Remover um evento remove automaticamente todos os seus participantes.
+* **👥 Gerenciamento de Participantes (CRUD):**
+    * Cadastro e controle do status de check-in.
+    * *Transferência de Eventos:* Funcionalidade que permite realocar um participante para outro evento através de seleção intuitiva.
+* **⚙️ Motor de Regras de Check-in (O Coração da Aplicação):**
+    * Painel exclusivo para configuração de janelas de tempo de entrada (liberação e encerramento).
+    * *Prevenção de Conflitos (Algoritmo):* Calcula intersecções matemáticas e impede que regras obrigatórias possuam janelas de validação incompatíveis.
+    * *Garantia de Estado:* Impede a remoção ou desativação da última regra ativa.
+* **🔔 UX e Feedbacks:** Sistema de Toast Notifications construído do zero, substituindo alertas nativos, além de loaders durante as simulações de requisição à API.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🌟 Diferenciais Implementados
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Este projeto foi além dos requisitos básicos, incorporando as melhores práticas e ferramentas do mercado:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+* **Arquitetura Modular:** Separação clara de responsabilidades (`contexts`, `components`, `pages`, `services`, `types`, `utils`).
+* **TypeScript:** Tipagem estrita em toda a aplicação, abolindo o uso de `any` e prevenindo erros em tempo de compilação.
+* **Testes Unitários Automatizados:** Implementação do Vitest + Testing Library. A lógica complexa de cálculo de conflito de regras foi isolada (`src/utils/checkinRules.ts`) e possui cobertura de testes automatizados.
+* **Qualidade e Padronização de Código:** Integração do ESLint com Prettier para garantir que o código esteja sempre limpo, legível e formatado automaticamente.
+* **Tailwind CSS v4:** Estilização moderna e 100% responsiva (Mobile-first) utilizando a versão mais recente do motor Oxide do Tailwind.
+* **Deploy:** Pipeline de CI/CD configurada para produção através da Vercel.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS v4
+* React Router DOM
+* Lucide React (Ícones)
+* Vitest (Testes Unitários)
+* ESLint + Prettier
+
+---
+
+## 📂 Estrutura do Projeto
+
+```plaintext
+src/
+├── components/       # Componentes reaproveitáveis e Layout (MainLayout, ProtectedRoute)
+├── contexts/         # Gerenciamento de Estado Global (AuthContext, ToastContext)
+├── pages/            # Telas da aplicação (Login, Dashboard, Eventos, Regras, etc)
+├── services/         # Mock da API e persistência de dados em memória
+├── types/            # Definições de interfaces do TypeScript
+└── utils/            # Funções utilitárias puras (ex: lógicas matemáticas de testes)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## ⚙️ Como Executar o Projeto Localmente
+Pré-requisitos
+Ter o Node.js instalado na máquina.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Passo a Passo
+1. Clone o repositório:
+
+```Bash
+git clone [https://github.com/SeuUsuario/painel-eventos-organizador.git](https://github.com/SeuUsuario/painel-eventos-organizador.git)
+cd painel-eventos-organizador
+```
+
+2. Instale as dependências:
+
+```Bash
+npm install
+```
+
+3. Inicie o servidor de desenvolvimento:
+
+```Bash
+npm run dev
+```
+
+4. Acesse a aplicação:
+Abra o seu navegador e acesse: http://localhost:5173
+
+## 🔐 Credenciais de Acesso (Mock API)
+Para testar a aplicação, utilize as seguintes credenciais na tela de login:
+
+E-mail: admin@eventos.pt
+
+Senha: 123456
+
+## 🧪 Como Executar os Testes e Formatação
+Para rodar a suíte de testes unitários (Vitest):
+
+```Bash
+npm run test
+```
+
+Para verificar erros de padronização (ESLint):
+
+```Bash
+npm run lint
+```
+
+Para formatar o código automaticamente (Prettier):
+
+```Bash
+npm run format
 ```
