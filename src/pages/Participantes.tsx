@@ -5,228 +5,326 @@ import { api } from '../services/api';
 import type { Evento, Participante } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
+// Componente principal para a gestão de participantes
 export const Participantes = () => {
-  // Hook para exibir notificações
+  // Hook para exibir notificações de sucesso ou erro na tela
   const { addToast } = useToast();
   
-  // Lista de participantes e eventos
+  // Armazena a lista de participantes carregada da API
   const [participants, setParticipants] = useState<Participante[]>([]);
+  
+  // Armazena a lista de eventos disponíveis para o formulário e filtros
   const [availableEvents, setAvailableEvents] = useState<Evento[]>([]);
   
-  // Controle de carregamento e buscas
+  // Controla a exibição do ícone de carregamento durante requisições iniciais
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Armazena o termo de busca digitado pelo usuário
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Armazena o ID do evento selecionado no filtro lateral
   const [filterEventId, setFilterEventId] = useState('');
+  
+  // Armazena o status de check-in selecionado no filtro lateral
   const [filterCheckIn, setFilterCheckIn] = useState('');
 
-  // Controle do modal e formulário
+  // Controla a visibilidade do modal de criação/edição
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Controla o estado de bloqueio do botão durante o salvamento
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Armazena os dados do participante atual sendo criado ou editado
   const [currentParticipant, setCurrentParticipant] = useState<Participante>({
     id: '', name: '', email: '', eventId: '', eventName: '', checkIn: false
   });
 
-  // Carrega os dados simultaneamente da API
+  // Busca a lista de participantes e eventos simultaneamente na API
   const loadData = () => {
     setIsLoading(true);
-    Promise.all([api.getParticipantes(), api.getEventos()]).then(([parts, evts]) => {
-      setParticipants(parts);
-      setAvailableEvents(evts);
-      setIsLoading(false);
-    });
+    Promise.all([api.getParticipantes(), api.getEventos()])
+      .then(([parts, evts]) => {
+        setParticipants(parts);
+        setAvailableEvents(evts);
+      })
+      .catch(() => addToast('Erro ao carregar dados', 'error'))
+      .finally(() => setIsLoading(false));
   };
 
-  // Dispara o carregamento inicial
-  useEffect(() => { 
-    loadData(); 
+  // Executa o carregamento dos dados assim que o componente é montado
+  useEffect(() => {
+    loadData();
   }, []);
 
-  // Abre o modal limpo para um novo cadastro
-  const openAddModal = () => {
-    setCurrentParticipant({ 
-      id: '', name: '', email: '', 
-      eventId: availableEvents.length > 0 ? availableEvents[0].id : '', 
-      eventName: '', checkIn: false 
-    });
+  // Filtra a lista de participantes em tempo real com base na busca e nos selects
+  const filteredParticipants = participants.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         p.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesEvent = !filterEventId || p.eventId === filterEventId;
+    const matchesCheckIn = filterCheckIn === '' || 
+                          (filterCheckIn === 'done' ? p.checkIn : !p.checkIn);
+    
+    return matchesSearch && matchesEvent && matchesCheckIn;
+  });
+
+  // Prepara o estado do formulário para inserir um novo participante e abre o modal
+  const handleAddClick = () => {
+    setCurrentParticipant({ id: '', name: '', email: '', eventId: '', eventName: '', checkIn: false });
     setIsModalOpen(true);
   };
 
-  // Abre o modal com os dados do participante selecionado
-  const openEditModal = (participant: Participante) => { 
-    setCurrentParticipant({ ...participant }); 
-    setIsModalOpen(true); 
+  // Preenche o formulário com os dados do participante selecionado e abre o modal
+  const handleEditClick = (participant: Participante) => {
+    setCurrentParticipant({ ...participant });
+    setIsModalOpen(true);
   };
 
-  // Valida e salva os dados na API
-  const handleSave = async (e: FormEvent) => {
-    e.preventDefault();
+  // Solicita a exclusão do participante na API e atualiza a lista em tela
+  const handleDeleteClick = async (id: string) => {
+    if (!confirm('Deseja realmente remover este participante?')) return;
     
-    if (!currentParticipant.name || !currentParticipant.email || !currentParticipant.eventId) {
-      addToast('Preencha os dados e vincule a um evento.', 'error');
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      await api.salvarParticipante(currentParticipant);
-      addToast('Participante guardado com sucesso!', 'success');
-      setIsModalOpen(false);
-      loadData();
-    } catch { 
-      addToast('Erro ao guardar participante.', 'error'); 
-    } finally { 
-      setIsSaving(false); 
-    }
-  };
-
-  // Remove o participante após confirmação
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Tem a certeza que deseja remover este participante?')) return;
     try {
       await api.excluirParticipante(id);
-      addToast('Participante removido com sucesso!', 'success');
+      addToast('Participante removido com sucesso', 'success');
       loadData();
-    } catch { 
-      addToast('Erro ao remover participante.', 'error'); 
+    } catch (error) {
+      addToast('Erro ao remover participante', 'error');
     }
   };
 
-  // Filtra a lista com base na busca, evento e status
-  const filteredParticipants = participants.filter(p => {
-    const matchQuery = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                       p.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchEvent = filterEventId ? p.eventId === filterEventId : true;
-    const matchCheckIn = filterCheckIn === 'true' ? p.checkIn === true : 
-                         filterCheckIn === 'false' ? p.checkIn === false : true;
-
-    return matchQuery && matchEvent && matchCheckIn;
-  });
+  // Envia os dados do formulário para a API para criação ou atualização
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    
+    try {
+      await api.salvarParticipante(currentParticipant);
+      addToast(currentParticipant.id ? 'Participante atualizado com sucesso' : 'Participante cadastrado com sucesso', 'success');
+      setIsModalOpen(false);
+      loadData();
+    } catch (error) {
+      addToast('Erro ao salvar participante', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
-    <div className="p-6 md:p-8 h-full flex flex-col relative">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Participantes</h1>
-        <button onClick={openAddModal} className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus size={20} className="mr-2" /> Adicionar
+        <button 
+          onClick={handleAddClick}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          <Plus size={20} /> Novo Participante
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Pesquisar nome ou e-mail..." 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" 
-            />
-          </div>
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      {/* Barra de Filtros e Busca */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          <input 
+            type="text"
+            placeholder="Buscar por nome ou e-mail..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-48">
+            <Filter className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <select 
-              value={filterEventId} 
-              onChange={(e) => setFilterEventId(e.target.value)} 
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+              value={filterEventId}
+              onChange={(e) => setFilterEventId(e.target.value)}
             >
               <option value="">Todos os Eventos</option>
-              {availableEvents.map(evt => (
-                <option key={evt.id} value={evt.id}>{evt.name}</option>
+              {availableEvents.map(event => (
+                <option key={event.id} value={event.id}>{event.name}</option>
               ))}
             </select>
           </div>
-          <div>
-            <select 
-              value={filterCheckIn} 
-              onChange={(e) => setFilterCheckIn(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
-            >
-              <option value="">Status de Check-in (Todos)</option>
-              <option value="true">Check-in Realizado</option>
-              <option value="false">Pendente</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center p-12"><Loader2 className="animate-spin text-blue-600" size={32} /></div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-white text-gray-600 text-sm border-b border-gray-200">
-                  <th className="px-6 py-4 font-medium">Nome</th>
-                  <th className="px-6 py-4 font-medium">E-mail</th>
-                  <th className="px-6 py-4 font-medium">Evento</th>
-                  <th className="px-6 py-4 font-medium">Check-in</th>
-                  <th className="px-6 py-4 font-medium text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredParticipants.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhum participante encontrado com os filtros atuais.</td></tr>
-                ) : (
-                  filteredParticipants.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">{p.name}</td>
-                      <td className="px-6 py-4 text-gray-500">{p.email}</td>
-                      <td className="px-6 py-4 text-gray-700">
-                        <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded border border-gray-200 truncate inline-block max-w-[200px]" title={p.eventName}>{p.eventName}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {p.checkIn ? <span className="inline-flex items-center text-green-600 text-sm font-medium"><CheckCircle size={16} className="mr-1" /> Feito</span> : <span className="inline-flex items-center text-gray-400 text-sm font-medium"><XCircle size={16} className="mr-1" /> Pendente</span>}
-                      </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <button onClick={() => openEditModal(p)} className="text-gray-400 hover:text-blue-600 p-1 mx-1 transition-colors"><Edit2 size={18} /></button>
-                        <button onClick={() => handleDelete(p.id)} className="text-gray-400 hover:text-red-600 p-1 mx-1 transition-colors"><Trash2 size={18} /></button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+          <select 
+            className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none flex-1 md:w-48"
+            value={filterCheckIn}
+            onChange={(e) => setFilterCheckIn(e.target.value)}
+          >
+            <option value="">Todos os Status</option>
+            <option value="done">Check-in Realizado</option>
+            <option value="pending">Pendente</option>
+          </select>
         </div>
       </div>
 
+      {/* Tabela de Resultados */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-sm border border-gray-200">
+          <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
+          <span className="text-gray-500 font-medium">Carregando participantes...</span>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Participante</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Evento Vinculado</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-center">Status do Check-in</th>
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredParticipants.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    Nenhum participante encontrado com os filtros atuais.
+                  </td>
+                </tr>
+              ) : (
+                filteredParticipants.map(participant => (
+                  <tr key={participant.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-gray-900">{participant.name}</div>
+                      <div className="text-sm text-gray-500">{participant.email}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{participant.eventName}</td>
+                    <td className="px-6 py-4 text-center">
+                      {participant.checkIn ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                          <CheckCircle size={14} className="mr-1.5" /> Feito
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          <XCircle size={14} className="mr-1.5" /> Pendente
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button 
+                        onClick={() => handleEditClick(participant)} 
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors inline-flex items-center"
+                        title="Editar participante"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick(participant.id)} 
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center"
+                        title="Remover participante"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal de Cadastro e Edição */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">{currentParticipant.id ? 'Editar' : 'Novo'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                {currentParticipant.id ? <Edit2 size={20} className="text-blue-600"/> : <Plus size={20} className="text-blue-600"/>}
+                {currentParticipant.id ? 'Editar Participante' : 'Novo Participante'}
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)} 
+                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
             </div>
-            <form onSubmit={handleSave}>
-              <div className="p-6 space-y-4">
-                <div>
-                  <label htmlFor="participantName" className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                  <input id="participantName" type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" value={currentParticipant.name} onChange={(e) => setCurrentParticipant({...currentParticipant, name: e.target.value})} />
-                </div>
-                <div>
-                  <label htmlFor="participantEmail" className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                  <input id="participantEmail" type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" value={currentParticipant.email} onChange={(e) => setCurrentParticipant({...currentParticipant, email: e.target.value})} />
-                </div>
-                <div>
-                  <label htmlFor="participantEvent" className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
-                  <select id="participantEvent" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" value={currentParticipant.eventId} onChange={(e) => setCurrentParticipant({...currentParticipant, eventId: e.target.value})}>
-                    <option value="" disabled>Selecione um evento</option>
-                    {availableEvents.map(e => <option key={e.id} value={e.id}>{e.name} ({e.status})</option>)}
-                  </select>
-                </div>
-                <div className="pt-2">
-                  <label htmlFor="participantCheckIn" className="flex items-center cursor-pointer">
-                    <input id="participantCheckIn" type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked={currentParticipant.checkIn} onChange={(e) => setCurrentParticipant({...currentParticipant, checkIn: e.target.checked})} />
-                    <span className="ml-2 text-sm text-gray-700 font-medium">Realizou Check-in</span>
-                  </label>
-                </div>
+            
+            <div className="p-6 space-y-5 overflow-y-auto">
+              <div>
+                <label htmlFor="p-name" className="block text-sm font-bold text-gray-700 mb-1.5">Nome Completo</label>
+                <input 
+                  id="p-name"
+                  required
+                  placeholder="Ex: João da Silva"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  value={currentParticipant.name}
+                  onChange={(e) => setCurrentParticipant({...currentParticipant, name: e.target.value})}
+                />
               </div>
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-200 rounded-lg">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50">Guardar</button>
+              
+              <div>
+                <label htmlFor="p-email" className="block text-sm font-bold text-gray-700 mb-1.5">E-mail</label>
+                <input 
+                  id="p-email"
+                  type="email"
+                  required
+                  placeholder="Ex: joao@email.com"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  value={currentParticipant.email}
+                  onChange={(e) => setCurrentParticipant({...currentParticipant, email: e.target.value})}
+                />
               </div>
-            </form>
-          </div>
+              
+              <div>
+                <label htmlFor="p-event" className="block text-sm font-bold text-gray-700 mb-1.5">Vincular ao Evento</label>
+                <select 
+                  id="p-event"
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white transition-all"
+                  value={currentParticipant.eventId}
+                  onChange={(e) => setCurrentParticipant({...currentParticipant, eventId: e.target.value})}
+                >
+                  <option value="" disabled>Selecione um evento na lista...</option>
+                  {availableEvents.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+                <p className="text-xs text-gray-500 mt-1.5">A alteração do evento transferirá o participante imediatamente.</p>
+              </div>
+              
+              <div className="pt-3 pb-1 border-t border-gray-100">
+                <label className="flex items-center cursor-pointer group p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox"
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0 transition-all cursor-pointer"
+                      checked={currentParticipant.checkIn}
+                      onChange={(e) => setCurrentParticipant({...currentParticipant, checkIn: e.target.checked})}
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <span className="block text-sm font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
+                      Status de Check-in
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      Marque se o participante já confirmou presença no evento.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
+              <button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)} 
+                className="px-5 py-2.5 text-gray-700 font-semibold bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={isSaving}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center"
+              >
+                {isSaving && <Loader2 className="animate-spin mr-2" size={18} />}
+                {isSaving ? 'Salvando...' : (currentParticipant.id ? 'Atualizar' : 'Cadastrar')}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
