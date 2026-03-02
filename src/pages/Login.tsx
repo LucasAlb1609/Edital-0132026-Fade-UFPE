@@ -14,13 +14,14 @@ export const Login = () => {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-
+    
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard'); // Redireciona via React Router após login
-    } catch {
-      // Catch vazio: Erro já foi tratado pelo Toast no AuthContext e lançado aqui para interromper o fluxo
+      navigate('/dashboard'); 
+    } catch (error) {
+      // Regista o erro no console
+      console.error('Falha na autenticação:', error);
     } finally {
       setIsLoading(false);
     }
@@ -44,13 +45,13 @@ export const Login = () => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="admin@eventos.pt"
-                required
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                placeholder="admin@eventos.pt" 
+                required 
               />
             </div>
           </div>
@@ -60,19 +61,19 @@ export const Login = () => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="••••••"
-                required
+              <input 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                placeholder="••••••" 
+                required 
               />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={isLoading || !email || !password}
+          <button 
+            type="submit" 
+            disabled={isLoading || !email || !password} 
             className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Entrar no Painel'}
@@ -80,9 +81,7 @@ export const Login = () => {
         </form>
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>Credenciais de teste:</p>
-          <p>
-            Email: <b>admin@eventos.pt</b> | Senha: <b>123456</b>
-          </p>
+          <p>Email: <b>admin@eventos.pt</b> | Senha: <b>123456</b></p>
         </div>
       </div>
     </div>
