@@ -256,7 +256,10 @@ export const ConfiguracaoCheckin = () => {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label htmlFor={ruleNameId} className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor={ruleNameId}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Nome da Regra
                 </label>
                 <input
@@ -269,7 +272,10 @@ export const ConfiguracaoCheckin = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor={minutesBeforeId} className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={minutesBeforeId}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Liberar check-in
                   </label>
                   <div className="relative">
@@ -289,7 +295,10 @@ export const ConfiguracaoCheckin = () => {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor={minutesAfterId} className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor={minutesAfterId}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Encerrar check-in
                   </label>
                   <div className="relative">

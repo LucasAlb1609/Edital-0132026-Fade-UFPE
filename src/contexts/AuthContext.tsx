@@ -35,14 +35,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await api.login(email, password);
-      
+
       setUser(response.user);
       setToken(response.token);
-      
+
       // Salva os dados no navegador para manter a sessão ativa após reload
       localStorage.setItem('@EventosApp:token', response.token);
       localStorage.setItem('@EventosApp:user', JSON.stringify(response.user));
-      
+
       addToast('Sessão iniciada com sucesso!', 'success');
     } catch (error) {
       const authError = error as Error;

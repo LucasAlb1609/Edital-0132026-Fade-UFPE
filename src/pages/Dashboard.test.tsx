@@ -8,16 +8,28 @@ vi.mock('../services/api', () => ({
   api: {
     // Retorna dois eventos simulados para o teste para validar as estatísticas
     getEventos: vi.fn().mockResolvedValue([
-      { id: '1', name: 'Evento Alpha', date: '2026-05-10 10:00', location: 'Auditório A', status: 'Ativo' },
-      { id: '2', name: 'Evento Beta', date: '2026-06-15 14:00', location: 'Sala 10', status: 'Ativo' }
+      {
+        id: '1',
+        name: 'Evento Alpha',
+        date: '2026-05-10 10:00',
+        location: 'Auditório A',
+        status: 'Ativo',
+      },
+      {
+        id: '2',
+        name: 'Evento Beta',
+        date: '2026-06-15 14:00',
+        location: 'Sala 10',
+        status: 'Ativo',
+      },
     ]),
     // Retorna três participantes simulados para o teste
     getParticipantes: vi.fn().mockResolvedValue([
       { id: 'p1', name: 'User 1' },
       { id: 'p2', name: 'User 2' },
-      { id: 'p3', name: 'User 3' }
-    ])
-  }
+      { id: 'p3', name: 'User 3' },
+    ]),
+  },
 }));
 
 /**
@@ -30,15 +42,14 @@ const renderWithRouter = (ui: React.ReactElement) => {
 
 // Agrupa os testes de interface e comportamento do Dashboard
 describe('Componente React: Dashboard', () => {
-  
   // Verifica se a estrutura base e o título aparecem após o carregamento inicial
   it('deve renderizar o título principal e a estrutura de visão geral', async () => {
     renderWithRouter(<Dashboard />);
-    
+
     // Utilizamos findByText para aguardar que o estado de "Loading" termine
     const title = await screen.findByText(/Visão Geral/i);
     expect(title).toBeInTheDocument();
-    
+
     // Verifica se os rótulos informativos dos cards estão presentes
     expect(screen.getByText(/Total de Eventos/i)).toBeInTheDocument();
     expect(screen.getByText(/Total de Participantes/i)).toBeInTheDocument();
@@ -47,13 +58,13 @@ describe('Componente React: Dashboard', () => {
   // Valida a exibição correta dos dados processados vindos da API simulada
   it('deve exibir as contagens e a lista de próximos eventos vindos da API', async () => {
     renderWithRouter(<Dashboard />);
-    
+
     // Aguarda a renderização do número '2' (Total de eventos no mock)
     expect(await screen.findByText('2')).toBeInTheDocument();
-    
+
     // Aguarda a renderização do número '3' (Total de participantes no mock)
     expect(await screen.findByText('3')).toBeInTheDocument();
-    
+
     // Confirma se o nome do primeiro evento aparece na lista de "Próximos Eventos"
     expect(screen.getByText(/Evento Alpha/i)).toBeInTheDocument();
   });

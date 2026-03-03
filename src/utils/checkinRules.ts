@@ -3,7 +3,7 @@ import type { CheckInRule } from '../types';
 // Verifica se há conflito de horários entre regras obrigatórias
 export const hasConflicts = (rulesToCheck: CheckInRule[]): boolean => {
   // Filtra apenas as regras que estão ativas e são obrigatórias
-  const activeAndMandatoryRules = rulesToCheck.filter(rule => rule.isActive && rule.isMandatory);
+  const activeAndMandatoryRules = rulesToCheck.filter((rule) => rule.isActive && rule.isMandatory);
 
   // Se houver menos de duas regras obrigatórias, não há conflito possível
   if (activeAndMandatoryRules.length < 2) return false;
@@ -28,5 +28,5 @@ export const hasConflicts = (rulesToCheck: CheckInRule[]): boolean => {
 
 // Verifica se existe pelo menos uma regra ativa na lista
 export const hasAtLeastOneActive = (rulesToCheck: CheckInRule[]): boolean => {
-  return rulesToCheck.some(rule => rule.isActive);
+  return rulesToCheck.some((rule) => rule.isActive);
 };

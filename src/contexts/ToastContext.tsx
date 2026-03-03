@@ -25,7 +25,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const addToast = (message: string, type: 'success' | 'error' | 'info') => {
     const toastId = Date.now();
     setToasts((prev) => [...prev, { id: toastId, message, type }]);
-    
+
     // Remove o alerta após 4 segundos
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== toastId));

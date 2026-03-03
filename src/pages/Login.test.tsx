@@ -27,9 +27,7 @@ const mockLogin = vi.fn();
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <ToastProvider>
-      <MemoryRouter>
-        {ui}
-      </MemoryRouter>
+      <MemoryRouter>{ui}</MemoryRouter>
     </ToastProvider>
   );
 };
@@ -38,19 +36,19 @@ describe('Componente Login', () => {
   // Limpa o histórico de chamadas e redefine o mock antes de cada teste
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Define o retorno padrão simulado para o useAuth
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       user: null,
       login: mockLogin,
       logout: vi.fn(),
-    } as any); 
+    } as any);
   });
 
   it('deve renderizar o formulário de login corretamente', () => {
     renderWithProviders(<Login />);
-    
+
     expect(screen.getByRole('heading', { name: /painel do organizador/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/palavra-passe/i)).toBeInTheDocument();
@@ -60,13 +58,13 @@ describe('Componente Login', () => {
   it('deve chamar a função de login e redirecionar em caso de sucesso', async () => {
     // Configura o mock do login para resolver com sucesso
     mockLogin.mockResolvedValueOnce(undefined);
-    
+
     renderWithProviders(<Login />);
 
     // Simula a entrada do usuário
     fireEvent.change(screen.getByLabelText(/e-mail/i), { target: { value: 'admin@eventos.pt' } });
     fireEvent.change(screen.getByLabelText(/palavra-passe/i), { target: { value: '123456' } });
-    
+
     // Dispara a submissão
     fireEvent.click(screen.getByRole('button', { name: /entrar no painel/i }));
 
@@ -81,13 +79,13 @@ describe('Componente Login', () => {
   it('deve exibir mensagem de erro ao inserir credenciais inválidas', async () => {
     // Configura o mock do login para rejeitar (simulando erro na API)
     mockLogin.mockRejectedValueOnce(new Error('Credenciais inválidas.'));
-    
+
     renderWithProviders(<Login />);
 
     // Simula credenciais incorretas
     fireEvent.change(screen.getByLabelText(/e-mail/i), { target: { value: 'errado@eventos.pt' } });
     fireEvent.change(screen.getByLabelText(/palavra-passe/i), { target: { value: 'senhaerrada' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /entrar no painel/i }));
 
     await waitFor(() => {
