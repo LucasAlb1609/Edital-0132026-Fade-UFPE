@@ -3,25 +3,33 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
+// Componente da página de autenticação
 export const Login = () => {
+  // Estados para capturar as entradas do usuário e estado de carregamento
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Hooks para autenticação, navegação e notificações
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
+  // Função responsável por gerenciar a submissão do formulário
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     
     setIsLoading(true);
     try {
+      // Tenta realizar o login e redireciona em caso de sucesso
       await login(email, password);
       navigate('/dashboard'); 
     } catch (error) {
-      // Regista o erro no console
-      console.error('Falha na autenticação:', error);
+      // Exibe mensagem de erro visual para credenciais inválidas
+      addToast('Credenciais inválidas. Verifique o seu e-mail e palavra-passe.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -40,12 +48,13 @@ export const Login = () => {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+            <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
               <input 
+                id="userEmail"
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -56,12 +65,13 @@ export const Login = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Palavra-passe</label>
+            <label htmlFor="userPassword" className="block text-sm font-medium text-gray-700 mb-1">Palavra-passe</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input 
+                id="userPassword"
                 type="password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
