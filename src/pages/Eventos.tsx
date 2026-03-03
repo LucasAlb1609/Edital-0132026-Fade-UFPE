@@ -198,7 +198,7 @@ export const Eventos = () => {
               <span className="text-gray-500 font-medium">Carregando eventos...</span>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse min-w-[800px]">
+            <table className="w-full text-left border-collapse min-w-200">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600">Nome do Evento</th>

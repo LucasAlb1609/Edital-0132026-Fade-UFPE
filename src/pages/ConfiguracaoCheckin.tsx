@@ -207,7 +207,7 @@ export const ConfiguracaoCheckin = () => {
               <div className="flex items-center text-sm text-gray-600">
                 <Clock size={16} className="mr-2 text-gray-400" />
                 <span>
-                  Liberta <b>{rule.minutesBefore} min</b> antes
+                  Libera <b>{rule.minutesBefore} min</b> antes
                 </span>
               </div>
               <div className="flex items-center text-sm text-gray-600">
