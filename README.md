@@ -1,25 +1,26 @@
 # Sistema de Gestão de Eventos e Check-in - FADE-UFPE
 
-Este repositório contém uma aplicação web completa para a gestão de eventos, participantes e regras de check-in, desenvolvida como parte do processo seletivo do Edital 013/2026 da FADE-UFPE. A solução foi construída utilizando tecnologias modernas de front-end, focando em usabilidade, performance e robustez técnica.
+O repositório contém uma aplicação web completa para a gestão de eventos, participantes e regras de check-in, desenvolvida como parte do processo seletivo do Edital 013/2026 da FADE-UFPE.
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
-A aplicação foi desenvolvida com o ecossistema React mais recente, garantindo uma base de código tipada e de fácil manutenção:
+A aplicação foi desenvolvida com a versão do React mais recente, visando uma base de código tipada de fácil manutenção:
 
-*   **React 19**: Utilização das versões mais recentes da biblioteca para UI.
-*   **TypeScript**: Tipagem estática em todo o projeto para evitar erros em tempo de execução.
-*   **Vite**: Ferramenta de build ultra-rápida para o desenvolvimento moderno.
-*   **Tailwind CSS 4**: Estilização utilitária moderna, garantindo uma interface responsiva e limpa.
+*   **React 19 com Vite**: Versão mais recentes da biblioteca para UI com build rápida e otimizada.
+*   **TypeScript**: Tipagem estática e segurança de código.
+*   **Tailwind CSS 4**: Estilização e responsividade.
 *   **Lucide React**: Conjunto de ícones leves e consistentes.
-*   **React Router Dom 7**: Gerenciamento de rotas complexas e navegação protegida.
+*   **Context API**: Gerenciamento de estado global para Autenticação e Toasts.
+*   **React Router Dom 7**: Gerenciamento de rotas e navegação protegida.
 *   **Vitest & React Testing Library**: Framework de testes unitários e de integração.
+*   **ESLint & Prettier**: Padronização de código.
 
-## 📋 Funcionalidades Implementadas
+## Funcionalidades do Projeto
 
 O sistema oferece um fluxo completo para organizadores de eventos:
 
 ### 1. Autenticação Segura
-*   **Login de Acesso**: Proteção de rotas através de um sistema de autenticação.
+*   **Login de Acesso com autenticação JWT**: O token é armazenado e utilizado para proteger o acesso às rotas internas.
 *   **Persistência de Sessão**: Armazenamento seguro de tokens no `localStorage`.
 *   **Geração Dinâmica de Tokens**: Simulação de tokens JWT utilizando a `Web Crypto API` no lado do cliente.
 
@@ -37,13 +38,22 @@ O sistema oferece um fluxo completo para organizadores de eventos:
 *   **Controle de Check-in**: Visualização clara do status de presença (Feito/Pendente).
 *   **Busca Global**: Filtro rápido por nome, e-mail ou status de check-in.
 
-### 5. Configuração de Regras de Check-in (Diferencial)
+### 5. Configuração de Regras de Check-in
 *   **Múltiplas Regras**: Possibilidade de definir várias regras por evento (ex: QR Code, Documento, etc).
 *   **Janelas Temporais**: Configuração de minutos antes e depois do início do evento para liberação do check-in.
 *   **Regras Obrigatórias vs Opcionais**: Diferenciação lógica entre requisitos de entrada.
 *   **Algoritmo de Conflitos**: Sistema inteligente que detecta se duas regras obrigatórias possuem janelas de tempo que não se sobrepõem, garantindo que o check-in seja fisicamente possível.
 
-## ✨ Diferenciais Técnicos
+### 6. Estratégia e Cobertura de Testes (Diferencial)
+   Ferramentas Modernas: Implementação de testes utilizando Vitest (para execução rápida e compatibilidade com Vite) em conjunto com a React Testing Library.
+
+*   Foco no Comportamento do Usuário: Testes de componentes baseados em acessibilidade e interações reais (como preenchimento de formulários e cliques), utilizando seletores semânticos (getByRole, getByLabelText) em vez       de testar detalhes de implementação interna.
+*   Arquitetura de Colocation: Arquivos de teste (.test.tsx e .test.ts) posicionados exatamente na mesma pasta dos componentes que validam, facilitando a manutenção e garantindo a coesão do domínio.
+*   Mocking Avançado e Isolamento: Criação de cenários de teste controlados através do isolamento de dependências. Foram criados mocks completos para a camada de API (simulando resoluções e rejeições de rede), Contextos       Globais (AuthContext e ToastContext) e roteamento (MemoryRouter).
+*   Testes Unitários de Lógica de Negócio: Cobertura rigorosa de funções puras e algoritmos complexos, como a validação matemática de conflitos de horário nas regras de check-in, garantindo a integridade dos dados antes       mesmo de chegarem à interface.
+*   Padrão AAA (Arrange, Act, Assert): Estruturação clara de todos os testes preparando o estado, executando a ação do usuário e validando as mudanças no DOM ou as chamadas de funções (spies).
+
+##  Diferenciais Técnicos
 
 *   **Arquitetura Baseada em Contextos**: Uso de `Context API` para gerenciamento de estados globais (Autenticação e Notificações/Toast).
 *   **Simulação de API (Mock Service)**: Camada de serviço robusta que simula latência de rede e operações assíncronas, permitindo o funcionamento completo sem um backend real.
@@ -52,8 +62,9 @@ O sistema oferece um fluxo completo para organizadores de eventos:
     *   **Linting e Formatação**: Configurações rigorosas de ESLint e Prettier para manter a consistência do código.
 *   **Interface Responsiva**: Design adaptável para dispositivos móveis e desktops utilizando Tailwind CSS.
 *   **UX Aprimorada**: Feedback visual através de Toasts para todas as ações do usuário (sucesso, erro, avisos).
+*   **Cobertura de Testes:** Suíte de testes abrangente cobrindo lógicas de negócio (regras de check-in) e interações do usuário nos componentes (formulários, filtros e simulação de API).
 
-## 🛠️ Como Executar o Projeto
+##  Como Executar o Projeto?
 
 1.  **Clonar o repositório**:
     ```bash
@@ -72,14 +83,27 @@ O sistema oferece um fluxo completo para organizadores de eventos:
     ```
 
 4.  **Executar testes**:
+   O projeto possui uma suíte de testes configurada com Vitest. Para rodar os testes e visualizar a interface gráfica, utilize o comando:
+
     ```bash
-    npm test
+    npm run test -- --ui
+    ```
+    Ou, se preferir rodar os testes apenas no terminal de forma silenciosa:
+
+    ```bash
+    npm run test
     ```
 
-5.  **Gerar build de produção**:
+6.  **Gerar build de produção**:
     ```bash
     npm run build
     ```
 
+##  Credenciais de Acesso (Mocka)
+   Para testar a aplicação localmente ou no ambiente de deploy, utilize as seguintes credenciais simuladas:
+
+   E-mail: admin@eventos.pt
+   Senha: 123456
+
 ---
-**Desenvolvido por Lucas Alberto** - 2026
+**Desenvolvido por Lucas Albuquerque** - Março 2026
