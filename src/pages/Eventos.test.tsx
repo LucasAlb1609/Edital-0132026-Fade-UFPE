@@ -4,8 +4,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { Eventos } from '../pages/Eventos';
 import { api } from '../services/api';
 import { ToastProvider } from '../contexts/ToastContext';
+import type { Evento } from '../types'; // Importação do tipo
 
-// Mock das funções da API conforme o arquivo api.ts
+// Mock das funções da API
 vi.mock('../services/api', () => ({
   api: {
     getEventos: vi.fn(),
@@ -14,7 +15,7 @@ vi.mock('../services/api', () => ({
   }
 }));
 
-// Helper para injetar os provedores necessários (Toast e Router)
+// Helper para injetar os provedores necessários
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <MemoryRouter>
@@ -26,14 +27,14 @@ const renderWithProviders = (ui: React.ReactElement) => {
 };
 
 describe('Componente Eventos', () => {
-  // Limpa o estado dos mocks antes de cada teste
+  // Limpa o estado dos mocks
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('deve renderizar a lista de eventos e permitir pesquisa', async () => {
-    // Dados simulados para o teste
-    const mockEvents = [
+    // Tipagem explícita adicionada aqui para corrigir o erro do TypeScript
+    const mockEvents: Evento[] = [
       { id: '1', name: 'Tech Summit 2026', date: '2026-11-15 09:00', location: 'Centro de Convenções', status: 'Ativo' },
       { id: '2', name: 'Workshop React', date: '2025-10-20 14:00', location: 'Auditório', status: 'Encerrado' },
     ];
@@ -42,7 +43,7 @@ describe('Componente Eventos', () => {
 
     renderWithProviders(<Eventos />);
 
-    // Verifica se a tabela carrega e exibe o evento
+    // Verifica se a tabela carrega
     await waitFor(() => {
       expect(screen.getByText('Tech Summit 2026')).toBeInTheDocument();
     });
@@ -51,7 +52,7 @@ describe('Componente Eventos', () => {
     const searchInput = screen.getByPlaceholderText(/buscar por nome do evento/i);
     fireEvent.change(searchInput, { target: { value: 'Workshop' } });
     
-    // Tech Summit deve sumir e Workshop deve continuar
+    // Verifica remoção e permanência correta
     expect(screen.queryByText('Tech Summit 2026')).not.toBeInTheDocument();
     expect(screen.getByText('Workshop React')).toBeInTheDocument();
   });
@@ -65,19 +66,17 @@ describe('Componente Eventos', () => {
     // Clica no botão para abrir o modal
     fireEvent.click(screen.getByText(/novo evento/i));
 
-    // Preenche os campos usando as labels corretas definidas no componente
+    // Preenche os campos
     fireEvent.change(screen.getByLabelText(/nome do evento/i), { target: { value: 'Nova Conferência' } });
-    
-    // NOTA: Inserimos uma data futura (Dezembro/2026) para passar na validação de data no passado
     fireEvent.change(screen.getByLabelText(/^data$/i), { target: { value: '2026-12-31' } });
     fireEvent.change(screen.getByLabelText(/hora/i), { target: { value: '10:00' } });
     fireEvent.change(screen.getByLabelText(/local/i), { target: { value: 'Auditório Central' } });
     
-    // Submete o formulário clicando em Cadastrar
+    // Submete o formulário
     const submitButton = screen.getByRole('button', { name: /cadastrar/i });
     fireEvent.click(submitButton);
 
-    // Valida se a chamada para a API ocorreu
+    // Valida a chamada para a API
     await waitFor(() => {
       expect(api.salvarEvento).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Nova Conferência',
